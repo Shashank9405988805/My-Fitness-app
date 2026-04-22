@@ -1,202 +1,229 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Fitness App</title>
+  <title>Fitness App Pro</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: #0f172a;
-      color: white;
-    }
-
-    header {
-      text-align: center;
-      padding: 15px;
-      font-size: 20px;
-      background: #020617;
-    }
-
-    .container { padding: 15px; }
+    body { margin:0; font-family:Arial; background:#0f172a; color:white; }
+    header { text-align:center; padding:15px; background:#020617; }
+    .container { padding:15px; }
 
     .card {
-      background: #1e293b;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 10px;
+      background:#1e293b;
+      padding:15px;
+      margin-bottom:15px;
+      border-radius:10px;
     }
-
-    h2 { margin-top: 0; }
 
     select, button, input {
-      width: 100%;
-      padding: 10px;
-      margin-top: 8px;
-      border-radius: 6px;
-      border: none;
+      width:100%;
+      padding:10px;
+      margin-top:8px;
+      border:none;
+      border-radius:6px;
     }
 
-    button {
-      background: #22c55e;
-      color: white;
-    }
+    button { background:#22c55e; color:white; }
 
     li {
-      margin: 6px 0;
-      cursor: pointer;
+      margin:6px 0;
+      cursor:pointer;
+      padding:6px;
+      border-radius:6px;
     }
 
+    .active { background:#22c55e; }
+
     iframe {
-      width: 100%;
-      height: 200px;
-      border: none;
-      border-radius: 10px;
+      width:100%;
+      height:200px;
+      border:none;
+      border-radius:10px;
+    }
+
+    .bar {
+      height:10px;
+      background:#334155;
+      border-radius:10px;
+      margin-top:10px;
+    }
+
+    .progress {
+      height:100%;
+      width:0%;
+      background:#22c55e;
+      border-radius:10px;
     }
   </style>
 </head>
 
 <body>
 
-<header>💪 Fitness Tracker</header>
+<header>💪 Fitness Pro</header>
 
 <div class="container">
 
-  <!-- AI -->
-  <div class="card">
-    <h2>🧠 AI Coach</h2>
+<!-- AI -->
+<div class="card">
+  <h3>🧠 AI Coach</h3>
+  <select id="energy">
+    <option value="low">Low</option>
+    <option value="medium" selected>Medium</option>
+    <option value="high">High</option>
+  </select>
 
-    <select id="energy">
-      <option value="low">Low Energy</option>
-      <option value="medium" selected>Medium</option>
-      <option value="high">High</option>
-    </select>
+  <select id="soreness">
+    <option value="low">Low</option>
+    <option value="medium" selected>Medium</option>
+    <option value="high">High</option>
+  </select>
 
-    <select id="soreness">
-      <option value="low">Low Soreness</option>
-      <option value="medium" selected>Medium</option>
-      <option value="high">High</option>
-    </select>
+  <button onclick="runAI()">Suggest</button>
+  <p id="ai"></p>
+</div>
 
-    <button onclick="runAI()">Get Suggestion</button>
-    <p id="ai"></p>
-  </div>
+<!-- WORKOUT -->
+<div class="card">
+  <h3>🏋️ Workout</h3>
 
-  <!-- DAY -->
-  <div class="card">
-    <h2>Workout</h2>
-    <select id="day" onchange="loadWorkout()">
-      <option value="push">Push</option>
-      <option value="pull">Pull</option>
-      <option value="legs">Legs</option>
-    </select>
+  <select id="day" onchange="loadWorkout()">
+    <option value="push">Push</option>
+    <option value="pull">Pull</option>
+    <option value="legs">Legs</option>
+  </select>
 
-    <ul id="list"></ul>
-  </div>
+  <div id="list"></div>
 
-  <!-- FINISHER -->
-  <div class="card">
-    <h2>⚡ Finisher</h2>
-    <p id="finisher"></p>
-  </div>
+  <div class="bar"><div class="progress" id="progress"></div></div>
+</div>
 
-  <!-- CALORIES -->
-  <div class="card">
-    <h2>🔥 Calories</h2>
-    <input id="weight" placeholder="Enter weight (kg)">
-    <button onclick="calc()">Calculate</button>
-    <p id="cal"></p>
-  </div>
+<!-- FINISHER -->
+<div class="card">
+  <h3>⚡ Finisher</h3>
+  <div id="finisher"></div>
+</div>
 
-  <!-- VIDEO -->
-  <div class="card">
-    <h2>🎥 Exercise</h2>
-    <iframe id="video"></iframe>
-  </div>
+<!-- CALORIES -->
+<div class="card">
+  <h3>🔥 Calories</h3>
+  <input id="weight" placeholder="Enter weight (kg)">
+  <button onclick="calc()">Calculate</button>
+  <p id="cal"></p>
+  <div id="history"></div>
+</div>
+
+<!-- VIDEO -->
+<div class="card">
+  <h3>🎥 Exercise</h3>
+  <iframe id="video"></iframe>
+</div>
 
 </div>
 
 <script>
 
-// workouts
+// DATA
 const workouts = {
-  push: ["Push-ups","Bench Press","Shoulder Press"],
-  pull: ["Pull-ups","Row","Bicep Curl"],
-  legs: ["Squats","Lunges","Leg Press"]
+  push:{main:["Bench Press","Shoulder Press"], optional:["Push-ups","Incline Press","Lateral Raise","Chest Fly","Tricep Pushdown"]},
+  pull:{main:["Lat Pulldown","Row"], optional:["Face Pull","Curl","Hammer Curl","Shrugs","Reverse Fly"]},
+  legs:{main:["Squat","Leg Press"], optional:["Lunges","Step-up","Leg Extension","Hamstring Curl","Calf Raise"]}
 };
 
-// load workout
-function loadWorkout() {
-  let day = document.getElementById("day").value;
+const core = ["Plank","Dead Bug","Crunch","Bicycle","Russian Twist","Leg Raise"];
 
-  document.getElementById("list").innerHTML =
-    workouts[day].map(e =>
-      `<li onclick="video('${e}')">${e}</li>`
-    ).join("");
+// LOAD WORKOUT
+function loadWorkout(){
+  let d = day.value;
+  let html="<b>Main</b><ul>";
+
+  workouts[d].main.forEach(e=>{
+    html+=`<li onclick="select(this,'${e}')">${e}</li>`;
+  });
+
+  html+="</ul><b>Optional (pick 2–3)</b><ul>";
+
+  workouts[d].optional.forEach(e=>{
+    html+=`<li onclick="select(this,'${e}')">${e}</li>`;
+  });
+
+  html+="</ul>";
+
+  list.innerHTML=html;
+  updateProgress();
+}
+
+// SELECT
+function select(el,name){
+  el.classList.toggle("active");
+  video(name);
+  updateProgress();
+}
+
+function updateProgress(){
+  let c=document.querySelectorAll(".active").length;
+  progress.style.width=(c/6)*100+"%";
+}
+
+// FINISHER
+function finisher(){
+  let c=parseInt(localStorage.getItem("count")||0);
+
+  if(c%2==0){
+    finisher.innerHTML=
+    "🏃 Cardio (pick 1–2)<br>- Walk 6km/h incline 3%<br>- Incline 6% walk<br>- Cycle 12 min";
+  }else{
+    finisher.innerHTML="<b>🔥 Core (pick 2–3)</b><br>"+
+      core.map(e=>`<div onclick="video('${e}')">• ${e}</div>`).join("");
+  }
 }
 
 // AI
-function runAI() {
-  let e = energy.value;
-  let s = soreness.value;
+function runAI(){
+  let e=energy.value, s=soreness.value;
+  let msg="Moderate";
 
-  let msg = "Do moderate workout";
+  if(e=="high"&&s=="low") msg="Go intense 💪";
+  if(e=="low") msg="Light day";
+  if(s=="high") msg="Recovery";
 
-  if (e === "high" && s === "low") msg = "Go intense 💪";
-  if (e === "low") msg = "Keep it light";
-  if (s === "high") msg = "Recovery workout";
-
-  document.getElementById("ai").innerText = msg;
+  ai.innerText=msg;
 }
 
-// finisher
-function finisher() {
-  let count = localStorage.getItem("count") || 0;
+// CALORIES + HISTORY
+function calc(){
+  let w=weight.value;
+  if(!w) return;
 
-  if (count % 2 == 0) {
-    document.getElementById("finisher").innerText =
-      "Cardio: Walk 10 min (5-6 km/h, incline 3%)";
-  } else {
-    document.getElementById("finisher").innerText =
-      "Core: Plank 30 sec + Crunches";
-  }
+  let cal=Math.round(5*w*0.25);
+  calEl.innerText="🔥 "+cal+" kcal";
+
+  let h=JSON.parse(localStorage.getItem("hist")||"[]");
+  let d=new Date().toLocaleDateString();
+
+  h.push(d+" - "+cal+" kcal");
+  if(h.length>5) h.shift();
+
+  localStorage.setItem("hist",JSON.stringify(h));
+
+  history.innerHTML=h.join("<br>");
 }
 
-// calories
-function calc() {
-  let w = weight.value;
+// VIDEO
+function video(n){
+  const v={"Push-ups":"IODxDxX7oi4","Squat":"aclHkVaku9U","Plank":"pSHjTRCQxIw"};
 
-  if (!w) return;
-
-  let cal = Math.round(5 * w * 0.25);
-
-  document.getElementById("cal").innerText =
-    "Burned ~ " + cal + " kcal";
+  if(v[n]) videoFrame.src="https://www.youtube.com/embed/"+v[n];
 }
 
-// video
-function video(name) {
-  const vids = {
-    "Push-ups":"IODxDxX7oi4",
-    "Squats":"aclHkVaku9U",
-    "Plank":"pSHjTRCQxIw"
-  };
-
-  if (vids[name]) {
-    document.getElementById("video").src =
-      "https://www.youtube.com/embed/" + vids[name];
-  }
+// DONE COUNT
+function done(){
+  let c=parseInt(localStorage.getItem("count")||0)+1;
+  localStorage.setItem("count",c);
 }
 
-// done
-function done() {
-  let c = localStorage.getItem("count") || 0;
-  localStorage.setItem("count", ++c);
-}
-
-// init
-window.onload = function() {
+// INIT
+window.onload=function(){
   loadWorkout();
   finisher();
 };
