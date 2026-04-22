@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Fitness App Pro</title>
+  <title>My Fitness App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body { margin:0; font-family:Arial; background:#0f172a; color:white; }
-    header { text-align:center; padding:15px; background:#020617; }
+    header { text-align:center; padding:15px; background:#020617; font-size:20px; }
     .container { padding:15px; }
 
     .card {
@@ -15,6 +15,8 @@
       margin-bottom:15px;
       border-radius:10px;
     }
+
+    h3 { margin-bottom:10px; }
 
     select, button, input {
       width:100%;
@@ -26,8 +28,10 @@
 
     button { background:#22c55e; color:white; }
 
+    ul { padding-left:15px; margin-bottom:15px; }
+
     li {
-      margin:6px 0;
+      margin:8px 0;
       cursor:pointer;
       padding:6px;
       border-radius:6px;
@@ -37,7 +41,7 @@
 
     iframe {
       width:100%;
-      height:200px;
+      height:220px;
       border:none;
       border-radius:10px;
     }
@@ -60,13 +64,14 @@
 
 <body>
 
-<header>💪 Fitness Pro</header>
+<header>💪 My Fitness App</header>
 
 <div class="container">
 
 <!-- AI -->
 <div class="card">
   <h3>🧠 AI Coach</h3>
+
   <select id="energy">
     <option value="low">Low</option>
     <option value="medium" selected>Medium</option>
@@ -81,6 +86,16 @@
 
   <button onclick="runAI()">Suggest</button>
   <p id="ai"></p>
+</div>
+
+<!-- WARMUP -->
+<div class="card">
+  <h3>🔥 Warm-up</h3>
+  <ul>
+    <li onclick="playVideo('Walk')">Treadmill Walk (5–6 km/h, incline 2%, 5 min)</li>
+    <li onclick="playVideo('Squat')">Bodyweight Squats</li>
+    <li onclick="playVideo('Push-ups')">Push-ups</li>
+  </ul>
 </div>
 
 <!-- WORKOUT -->
@@ -101,22 +116,22 @@
 <!-- FINISHER -->
 <div class="card">
   <h3>⚡ Finisher</h3>
-  <div id="finisher"></div>
+  <div id="finisherBox"></div>
 </div>
 
 <!-- CALORIES -->
 <div class="card">
   <h3>🔥 Calories</h3>
   <input id="weight" placeholder="Enter weight (kg)">
-  <button onclick="calc()">Calculate</button>
-  <p id="cal"></p>
+  <button onclick="calcCalories()">Calculate</button>
+  <p id="caloriesResult"></p>
   <div id="history"></div>
 </div>
 
 <!-- VIDEO -->
 <div class="card">
   <h3>🎥 Exercise</h3>
-  <iframe id="video"></iframe>
+  <iframe id="videoFrame"></iframe>
 </div>
 
 </div>
@@ -134,69 +149,71 @@ const core = ["Plank","Dead Bug","Crunch","Bicycle","Russian Twist","Leg Raise"]
 
 // LOAD WORKOUT
 function loadWorkout(){
-  let d = day.value;
-  let html="<b>Main</b><ul>";
+  let d=document.getElementById("day").value;
 
+  let html="<b>Main Exercises</b><ul>";
   workouts[d].main.forEach(e=>{
     html+=`<li onclick="select(this,'${e}')">${e}</li>`;
   });
 
-  html+="</ul><b>Optional (pick 2–3)</b><ul>";
-
+  html+="</ul><b>Optional (Pick 2–3)</b><ul>";
   workouts[d].optional.forEach(e=>{
     html+=`<li onclick="select(this,'${e}')">${e}</li>`;
   });
 
   html+="</ul>";
 
-  list.innerHTML=html;
-  updateProgress();
+  document.getElementById("list").innerHTML=html;
 }
 
 // SELECT
 function select(el,name){
   el.classList.toggle("active");
-  video(name);
+  playVideo(name);
   updateProgress();
 }
 
 function updateProgress(){
   let c=document.querySelectorAll(".active").length;
-  progress.style.width=(c/6)*100+"%";
+  document.getElementById("progress").style.width=(c/6)*100+"%";
 }
 
-// FINISHER
-function finisher(){
+// AI FIXED
+function runAI(){
+  let e=energy.value, s=soreness.value;
+
+  let exercises=3;
+  let msg="Moderate";
+
+  if(e=="high"&&s=="low"){exercises=5; msg="High intensity";}
+  if(e=="low"){exercises=2; msg="Light workout";}
+  if(s=="high"){exercises=2; msg="Recovery";}
+
+  document.getElementById("ai").innerText=
+    `${msg}: Do ${exercises} exercises + finisher`;
+}
+
+// FINISHER FIXED
+function loadFinisher(){
   let c=parseInt(localStorage.getItem("count")||0);
 
   if(c%2==0){
-    finisher.innerHTML=
-    "🏃 Cardio (pick 1–2)<br>- Walk 6km/h incline 3%<br>- Incline 6% walk<br>- Cycle 12 min";
+    document.getElementById("finisherBox").innerHTML=
+      "🏃 Cardio (Pick 1–2)<br>- Walk 6 km/h incline 3%<br>- Incline walk 6–8%<br>- Cycling 12–15 min";
   }else{
-    finisher.innerHTML="<b>🔥 Core (pick 2–3)</b><br>"+
-      core.map(e=>`<div onclick="video('${e}')">• ${e}</div>`).join("");
+    document.getElementById("finisherBox").innerHTML=
+      "<b>🔥 Core (Pick 2–3)</b><br>"+
+      core.map(e=>`<div onclick="playVideo('${e}')">• ${e}</div>`).join("");
   }
 }
 
-// AI
-function runAI(){
-  let e=energy.value, s=soreness.value;
-  let msg="Moderate";
-
-  if(e=="high"&&s=="low") msg="Go intense 💪";
-  if(e=="low") msg="Light day";
-  if(s=="high") msg="Recovery";
-
-  ai.innerText=msg;
-}
-
-// CALORIES + HISTORY
-function calc(){
-  let w=weight.value;
+// CALORIES FIXED
+function calcCalories(){
+  let w=document.getElementById("weight").value;
   if(!w) return;
 
   let cal=Math.round(5*w*0.25);
-  calEl.innerText="🔥 "+cal+" kcal";
+  document.getElementById("caloriesResult").innerText="🔥 "+cal+" kcal";
 
   let h=JSON.parse(localStorage.getItem("hist")||"[]");
   let d=new Date().toLocaleDateString();
@@ -205,27 +222,28 @@ function calc(){
   if(h.length>5) h.shift();
 
   localStorage.setItem("hist",JSON.stringify(h));
-
-  history.innerHTML=h.join("<br>");
+  document.getElementById("history").innerHTML=h.join("<br>");
 }
 
-// VIDEO
-function video(n){
-  const v={"Push-ups":"IODxDxX7oi4","Squat":"aclHkVaku9U","Plank":"pSHjTRCQxIw"};
+// VIDEO FIXED
+function playVideo(n){
+  const v={
+    "Push-ups":"IODxDxX7oi4",
+    "Squat":"aclHkVaku9U",
+    "Plank":"pSHjTRCQxIw",
+    "Bench Press":"VmB1G1K7v94",
+    "Shoulder Press":"B-aVuyhvLHU"
+  };
 
-  if(v[n]) videoFrame.src="https://www.youtube.com/embed/"+v[n];
-}
-
-// DONE COUNT
-function done(){
-  let c=parseInt(localStorage.getItem("count")||0)+1;
-  localStorage.setItem("count",c);
+  if(v[n]){
+    document.getElementById("videoFrame").src="https://www.youtube.com/embed/"+v[n];
+  }
 }
 
 // INIT
 window.onload=function(){
   loadWorkout();
-  finisher();
+  loadFinisher();
 };
 
 </script>
