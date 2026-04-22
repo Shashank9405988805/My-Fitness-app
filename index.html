@@ -42,6 +42,7 @@
       height:220px;
       border:none;
       border-radius:10px;
+      margin-bottom:10px;
     }
 
     .bar {
@@ -135,6 +136,7 @@
 <div class="card">
   <h3>🎥 Exercise</h3>
   <iframe id="videoFrame"></iframe>
+  <button onclick="searchMore()">🔍 Search More Videos</button>
 </div>
 
 </div>
@@ -235,8 +237,10 @@ function calcCalories(){
   document.getElementById("history").innerHTML=h.join("<br>");
 }
 
-// 🔥 SMART VIDEO SYSTEM
+// SMART VIDEO SYSTEM
 function playVideo(name){
+
+  window.lastExercise = name;
 
   const videos = {
     "Push-ups":"IODxDxX7oi4",
@@ -252,7 +256,7 @@ function playVideo(name){
     "Bicycle":"9FGilxCbdz8",
     "Russian Twist":"wkD8rjkodUI",
     "Leg Raise":"JB2oyawG9KI",
-    "Cable Crunch":"2fjej2KQUqQ"
+    "Cable Crunch":"AV5PmZJIrrw"
   };
 
   let frame=document.getElementById("videoFrame");
@@ -277,6 +281,12 @@ function loadSearchVideo(name){
   let query=encodeURIComponent(name+" exercise proper form");
   document.getElementById("videoFrame").src=
     "https://www.youtube.com/embed?listType=search&list="+query;
+}
+
+// SEARCH BUTTON
+function searchMore(){
+  if(!window.lastExercise) return;
+  loadSearchVideo(window.lastExercise);
 }
 
 // INIT
