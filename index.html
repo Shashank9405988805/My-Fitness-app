@@ -220,9 +220,10 @@ function loadFinisher(){
   }
 }
 
-// VIDEO SYSTEM
+// 🔥 FINAL VIDEO SYSTEM (FIXED)
 function playVideo(name){
-  const v={
+
+  const v = {
     "Bench Press":"VmB1G1K7v94",
     "Shoulder Press":"B-aVuyhvLHU",
     "Squat":"aclHkVaku9U",
@@ -236,10 +237,32 @@ function playVideo(name){
     "Cable Crunch":"AV5PmZJIrrw"
   };
 
+  let frame = document.getElementById("videoFrame");
+
   if(v[name]){
-    document.getElementById("videoFrame").src=
-      "https://www.youtube.com/embed/"+v[name];
+    frame.src = "https://www.youtube.com/embed/" + v[name];
+  } else {
+    loadSearch(name);
+    return;
   }
+
+  setTimeout(() => {
+    checkAndFallback(name);
+  }, 2000);
+}
+
+function checkAndFallback(name){
+  let frame = document.getElementById("videoFrame");
+
+  if(!frame.src || frame.src.includes("undefined")){
+    loadSearch(name);
+  }
+}
+
+function loadSearch(name){
+  let query = encodeURIComponent(name + " exercise proper form");
+  document.getElementById("videoFrame").src =
+    "https://www.youtube.com/embed?listType=search&list=" + query;
 }
 
 // INIT
