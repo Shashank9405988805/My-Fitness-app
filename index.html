@@ -16,7 +16,7 @@
       border-radius:10px;
     }
 
-    select, button, input {
+    select, button {
       width:100%;
       padding:10px;
       margin-top:8px;
@@ -30,19 +30,32 @@
 
     li {
       margin:8px 0;
-      cursor:pointer;
       padding:6px;
       border-radius:6px;
     }
 
+    .exercise {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      cursor:pointer;
+    }
+
     .active { background:#22c55e; }
+
+    .small-btn {
+      width:auto;
+      padding:4px 8px;
+      font-size:12px;
+      margin-left:10px;
+      background:#3b82f6;
+    }
 
     iframe {
       width:100%;
       height:220px;
       border:none;
       border-radius:10px;
-      margin-bottom:10px;
     }
 
     .bar {
@@ -86,16 +99,6 @@
   <p id="ai"></p>
 </div>
 
-<!-- WARMUP -->
-<div class="card">
-  <h3>🔥 Warm-up</h3>
-  <ul>
-    <li onclick="handleClick(event,'Walk')">Treadmill Walk (5–6 km/h, incline 2%, 5 min)</li>
-    <li onclick="handleClick(event,'Squat')">Bodyweight Squats</li>
-    <li onclick="handleClick(event,'Push-ups')">Push-ups</li>
-  </ul>
-</div>
-
 <!-- WORKOUT -->
 <div class="card">
   <h3>🏋️ Workout</h3>
@@ -123,20 +126,10 @@
   <div id="finisherBox"></div>
 </div>
 
-<!-- CALORIES -->
-<div class="card">
-  <h3>🔥 Calories</h3>
-  <input id="weight" placeholder="Enter weight (kg)">
-  <button onclick="calcCalories()">Calculate</button>
-  <p id="caloriesResult"></p>
-  <div id="history"></div>
-</div>
-
 <!-- VIDEO -->
 <div class="card">
   <h3>🎥 Exercise</h3>
   <iframe id="videoFrame"></iframe>
-  <button onclick="searchMore()">🔍 Search More Videos</button>
 </div>
 
 </div>
@@ -145,37 +138,51 @@
 
 // DATA
 const workouts = {
-  push:{main:["Bench Press","Shoulder Press"], optional:["Push-ups","Incline Press","Lateral Raise","Chest Fly","Tricep Pushdown"]},
-  pull:{main:["Lat Pulldown","Row"], optional:["Face Pull","Curl","Hammer Curl","Shrugs","Reverse Fly"]},
-  legs:{main:["Squat","Leg Press"], optional:["Lunges","Step-up","Leg Extension","Hamstring Curl","Calf Raise"]}
+  push:{main:["Bench Press","Shoulder Press"], optional:["Incline Press","Lateral Raise","Chest Fly","Tricep Pushdown"]},
+  pull:{main:["Lat Pulldown","Row"], optional:["Face Pull","Curl","Hammer Curl","Shrugs"]},
+  legs:{main:["Squat","Leg Press"], optional:["Lunges","Leg Extension","Hamstring Curl","Calf Raise"]}
 };
 
-const core = ["Plank","Dead Bug","Crunch","Bicycle","Russian Twist","Leg Raise","Cable Crunch"];
+const core = ["Plank","Crunch","Bicycle","Russian Twist","Leg Raise","Cable Crunch","Hanging Knee Raise"];
 
 // LOAD WORKOUT
 function loadWorkout(){
   let d=document.getElementById("day").value;
 
   let html="<b>Main Exercises</b><ul>";
-  workouts[d].main.forEach(e=>{
-    html+=`<li onclick="handleClick(event,'${e}')">${e}</li>`;
-  });
+  workouts[d].main.forEach(e=> html+=exerciseHTML(e));
 
-  html+="</ul><b>Optional (Pick 2–3)</b><ul>";
-  workouts[d].optional.forEach(e=>{
-    html+=`<li onclick="handleClick(event,'${e}')">${e}</li>`;
-  });
+  html+="</ul><b>Optional</b><ul>";
+  workouts[d].optional.forEach(e=> html+=exerciseHTML(e));
 
   html+="</ul>";
 
   document.getElementById("list").innerHTML=html;
 }
 
+// GENERATE EXERCISE
+function exerciseHTML(name){
+  return `
+    <li class="exercise" onclick="handleClick(event,'${name}')">
+      ${name}
+      <button class="small-btn" onclick="searchVideo(event,'${name}')">▶</button>
+    </li>
+  `;
+}
+
 // CLICK HANDLER
 function handleClick(event,name){
   playVideo(name);
-  event.target.classList.toggle("active");
+  event.currentTarget.classList.toggle("active");
   updateProgress();
+}
+
+// SEARCH VIDEO
+function searchVideo(event,name){
+  event.stopPropagation();
+  let query=encodeURIComponent(name+" exercise proper form");
+  document.getElementById("videoFrame").src=
+    "https://www.youtube.com/embed?listType=search&list="+query;
 }
 
 // PROGRESS
@@ -192,11 +199,11 @@ function runAI(){
   let msg="Moderate";
 
   if(e=="high"&&s=="low"){exercises=5; msg="High intensity";}
-  if(e=="low"){exercises=2; msg="Light workout";}
+  if(e=="low"){exercises=2; msg="Light";}
   if(s=="high"){exercises=2; msg="Recovery";}
 
   document.getElementById("ai").innerText=
-    `${msg}: Do ${exercises} exercises + finisher`;
+    `${msg}: Do ${exercises} exercises`;
 }
 
 // FINISHER
@@ -205,53 +212,23 @@ function loadFinisher(){
 
   if(type==="cardio"){
     document.getElementById("finisherBox").innerHTML=
-      `<ul>
-        <li onclick="handleClick(event,'Walk')">Walk 6 km/h incline 3%</li>
-        <li onclick="handleClick(event,'Incline Walk')">Incline Walk 6–8%</li>
-        <li onclick="handleClick(event,'Cycling')">Cycling 12–15 min</li>
-      </ul>`;
+      `<ul>${exerciseHTML("Walk")}${exerciseHTML("Cycling")}</ul>`;
   }else{
     document.getElementById("finisherBox").innerHTML=
       `<b>🔥 Core (Pick 2–3)</b>
-       <ul>
-        ${core.map(e=>`<li onclick="handleClick(event,'${e}')">${e}</li>`).join("")}
-       </ul>`;
+       <ul>${core.map(e=>exerciseHTML(e)).join("")}</ul>`;
   }
 }
 
-// CALORIES
-function calcCalories(){
-  let w=document.getElementById("weight").value;
-  if(!w) return;
-
-  let cal=Math.round(5*w*0.25);
-  document.getElementById("caloriesResult").innerText="🔥 "+cal+" kcal";
-
-  let h=JSON.parse(localStorage.getItem("hist")||"[]");
-  let d=new Date().toLocaleDateString();
-
-  h.push(d+" - "+cal+" kcal");
-  if(h.length>5) h.shift();
-
-  localStorage.setItem("hist",JSON.stringify(h));
-  document.getElementById("history").innerHTML=h.join("<br>");
-}
-
-// SMART VIDEO SYSTEM
+// VIDEO SYSTEM
 function playVideo(name){
-
-  window.lastExercise = name;
-
-  const videos = {
-    "Push-ups":"IODxDxX7oi4",
+  const v={
     "Bench Press":"VmB1G1K7v94",
     "Shoulder Press":"B-aVuyhvLHU",
     "Squat":"aclHkVaku9U",
     "Walk":"ml6cT4AZdqI",
-    "Incline Walk":"ml6cT4AZdqI",
     "Cycling":"Rk0XgH0YdZQ",
     "Plank":"pSHjTRCQxIw",
-    "Dead Bug":"4XLEnwUr3QE",
     "Crunch":"Xyd_fa5zoEU",
     "Bicycle":"9FGilxCbdz8",
     "Russian Twist":"wkD8rjkodUI",
@@ -259,34 +236,10 @@ function playVideo(name){
     "Cable Crunch":"AV5PmZJIrrw"
   };
 
-  let frame=document.getElementById("videoFrame");
-
-  if(videos[name]){
-    frame.src="https://www.youtube.com/embed/"+videos[name];
-  } else {
-    loadSearchVideo(name);
+  if(v[name]){
+    document.getElementById("videoFrame").src=
+      "https://www.youtube.com/embed/"+v[name];
   }
-
-  setTimeout(()=>tryFallback(name),3000);
-}
-
-function tryFallback(name){
-  let frame=document.getElementById("videoFrame");
-  if(!frame.src || frame.src.includes("undefined")){
-    loadSearchVideo(name);
-  }
-}
-
-function loadSearchVideo(name){
-  let query=encodeURIComponent(name+" exercise proper form");
-  document.getElementById("videoFrame").src=
-    "https://www.youtube.com/embed?listType=search&list="+query;
-}
-
-// SEARCH BUTTON
-function searchMore(){
-  if(!window.lastExercise) return;
-  loadSearchVideo(window.lastExercise);
 }
 
 // INIT
