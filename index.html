@@ -3,51 +3,100 @@
 <head>
   <title>My Fitness App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     body {
-      font-family: Arial;
       margin: 0;
-      background: #0f172a;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f172a, #020617);
       color: white;
     }
+
     header {
-      background: #020617;
-      padding: 15px;
       text-align: center;
-      font-size: 20px;
-      color: #38bdf8;
+      padding: 18px;
+      font-size: 22px;
+      font-weight: bold;
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
     }
+
     .container {
       padding: 15px;
     }
+
     .card {
-      background: #1e293b;
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(12px);
+      border-radius: 15px;
       padding: 15px;
       margin-bottom: 15px;
-      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
+
     h2 {
-      color: #22c55e;
+      margin-top: 0;
+      color: #38bdf8;
     }
-    li {
-      margin: 8px 0;
+
+    select, button {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      margin-top: 8px;
+    }
+
+    button {
+      background: linear-gradient(90deg, #22c55e, #4ade80);
+      font-weight: bold;
       cursor: pointer;
     }
-    button {
-      padding: 10px;
-      margin-top: 10px;
-      background: #22c55e;
-      border: none;
-      color: white;
-      border-radius: 6px;
-      width: 100%;
+
+    ul {
+      padding-left: 15px;
     }
-    input, select {
-      width: 100%;
+
+    li {
+      margin: 8px 0;
       padding: 8px;
-      margin-top: 5px;
-      border-radius: 5px;
+      border-radius: 8px;
+      transition: 0.2s;
+    }
+
+    li:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .highlight {
+      background: rgba(34,197,94,0.3);
+    }
+
+    iframe {
+      width: 100%;
+      height: 220px;
+      border-radius: 12px;
       border: none;
+    }
+
+    .progress-bar {
+      height: 10px;
+      background: #1e293b;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #22c55e, #4ade80);
+      transition: width 0.3s;
+    }
+
+    .tag {
+      font-size: 12px;
+      opacity: 0.7;
     }
   </style>
 </head>
@@ -58,46 +107,67 @@
 
 <div class="container">
 
-  <!-- DAY SELECT -->
+  <!-- AI -->
   <div class="card">
-    <h2>📅 Select Day</h2>
+    <h2>🧠 AI Coach</h2>
+
+    <div class="tag">Energy</div>
+    <select id="energy">
+      <option value="low">Low</option>
+      <option value="medium" selected>Medium</option>
+      <option value="high">High</option>
+    </select>
+
+    <div class="tag">Soreness</div>
+    <select id="soreness">
+      <option value="low">Low</option>
+      <option value="medium" selected>Medium</option>
+      <option value="high">High</option>
+    </select>
+
+    <button onclick="runAI()">⚡ Optimize Workout</button>
+
+    <p id="aiSuggestion"></p>
+  </div>
+
+  <!-- DAY -->
+  <div class="card">
+    <h2>📅 Workout Day</h2>
     <select id="daySelect" onchange="loadWorkout()">
-      <option value="push1">Day 1 - Push</option>
-      <option value="pull1">Day 2 - Pull</option>
-      <option value="legs1">Day 3 - Legs</option>
-      <option value="push2">Day 4 - Push</option>
-      <option value="pull2">Day 5 - Pull</option>
-      <option value="legs2">Day 6 - Legs</option>
+      <option value="push">Push</option>
+      <option value="pull">Pull</option>
+      <option value="legs">Legs</option>
     </select>
   </div>
 
-  <!-- WARMUP -->
+  <!-- MAIN -->
   <div class="card">
-    <h2>🔥 Warm-up (Mandatory)</h2>
-    <ul>
-      <li onclick="openVideo('Treadmill Walk')">
-        Treadmill Walk – 5 min (5 km/h, Incline 1%)
-      </li>
-      <li onclick="openVideo('Arm Circles')">Arm Circles – 20 reps</li>
-      <li onclick="openVideo('Leg Swings')">Leg Swings – 15 each leg</li>
-      <li onclick="openVideo('Bodyweight Squats')">Bodyweight Squats – 15 reps</li>
-    </ul>
+    <h2>🏋️ Main Exercises</h2>
+    <ul id="mainList"></ul>
   </div>
 
-  <!-- WORKOUT -->
+  <!-- OPTIONAL -->
   <div class="card">
-    <h2>🏋️ Workout</h2>
-    <ul id="workoutList"></ul>
-    <button onclick="markDone()">✅ Mark Workout Done</button>
+    <h2>🔄 Choose Exercises</h2>
+    <ul id="optionalList"></ul>
+
+    <div class="progress-bar">
+      <div class="progress" id="progressBar"></div>
+    </div>
   </div>
 
-  <!-- PROGRESS -->
+  <button onclick="markDone()">✅ Workout Done</button>
+
+  <!-- VIDEO -->
   <div class="card">
-    <h2>📊 Progress</h2>
-    Weight:
-    <input type="number" id="weight">
-    <button onclick="saveWeight()">Save Weight</button>
-    <p id="streak">🔥 Streak: 0 days</p>
+    <h2>🎥 Exercise Guide</h2>
+    <iframe id="videoFrame"></iframe>
+  </div>
+
+  <!-- STREAK -->
+  <div class="card">
+    <h2>🔥 Streak</h2>
+    <p id="streak">0 days</p>
   </div>
 
 </div>
@@ -105,94 +175,114 @@
 <script>
 
 const workouts = {
-  push1: ["Push-ups","Dumbbell Bench Press","Shoulder Press","Lateral Raises","Tricep Pushdown","Hanging Knee Raises","Cable Crunch","Plank"],
-  pull1: ["Lat Pulldown","Seated Row","Face Pull","Bicep Curl","Russian Twists","Side Plank","Dead Bug"],
-  legs1: ["Squats","Leg Press","Lunges","Calf Raises","Plank"],
-  push2: ["Incline Dumbbell Press","Push-ups","Shoulder Press","Hanging Leg Raises","Bicycle Crunch","Plank"],
-  pull2: ["Lat Pulldown","Seated Row","Bicep Curl","Cable Woodchopper","Reverse Crunch","Plank Shoulder Tap"],
-  legs2: ["Goblet Squat","Step-ups","Hamstring Curl","Hollow Hold"]
+  push: {
+    main: ["Dumbbell Bench Press","Shoulder Press"],
+    optional: ["Push-ups","Incline Dumbbell Press","Lateral Raises","Chest Fly","Tricep Pushdown","Overhead Tricep Extension"]
+  },
+  pull: {
+    main: ["Lat Pulldown","Seated Row"],
+    optional: ["Face Pull","Dumbbell Row","Bicep Curl","Hammer Curl","Reverse Fly","Shrugs"]
+  },
+  legs: {
+    main: ["Squats","Leg Press"],
+    optional: ["Lunges","Step-ups","Hamstring Curl","Leg Extension","Calf Raises"]
+  }
 };
 
 function loadWorkout() {
   let day = document.getElementById("daySelect").value;
-  let list = workouts[day];
-  let html = "";
-  list.forEach(item => {
-    html += `<li onclick="openVideo('${item}')">${item}</li>`;
+
+  document.getElementById("mainList").innerHTML =
+    workouts[day].main.map(e => `<li onclick="openVideo('${e}')">${e}</li>`).join("");
+
+  document.getElementById("optionalList").innerHTML =
+    workouts[day].optional.map(e =>
+      `<li onclick="toggleSelect(this,'${e}')">${e}</li>`
+    ).join("");
+
+  updateProgress();
+}
+
+function toggleSelect(el, name) {
+  el.classList.toggle("highlight");
+  openVideo(name);
+  updateProgress();
+}
+
+function updateProgress() {
+  let selected = document.querySelectorAll(".highlight").length;
+  let percent = (selected / 4) * 100;
+  document.getElementById("progressBar").style.width = percent + "%";
+}
+
+function runAI() {
+  let energy = document.getElementById("energy").value;
+  let soreness = document.getElementById("soreness").value;
+
+  let intensity = 3;
+
+  if (energy === "low") intensity--;
+  if (energy === "high") intensity++;
+  if (soreness === "high") intensity--;
+  if (soreness === "low") intensity++;
+
+  intensity = Math.max(2, Math.min(5, intensity));
+
+  highlightExercises(intensity);
+
+  document.getElementById("aiSuggestion").innerText =
+    `Do ${intensity} exercises today`;
+}
+
+function highlightExercises(count) {
+  let items = document.querySelectorAll("#optionalList li");
+
+  items.forEach((item, index) => {
+    item.classList.toggle("highlight", index < count);
   });
-  document.getElementById("workoutList").innerHTML = html;
-}
-
-function markDone() {
-  let streak = localStorage.getItem("streak") || 0;
-  streak++;
-  localStorage.setItem("streak", streak);
-  document.getElementById("streak").innerText = "🔥 Streak: " + streak + " days";
-  alert("Workout completed 💪");
-}
-
-function saveWeight() {
-  let weight = document.getElementById("weight").value;
-  localStorage.setItem("weight", weight);
-  alert("Weight saved!");
 }
 
 function openVideo(name) {
   const videos = {
-    "Push-ups":"https://www.youtube.com/watch?v=IODxDxX7oi4",
-    "Dumbbell Bench Press":"https://www.youtube.com/watch?v=VmB1G1K7v94",
-    "Incline Dumbbell Press":"https://www.youtube.com/watch?v=8iPEnn-ltC8",
-    "Shoulder Press":"https://www.youtube.com/watch?v=B-aVuyhvLHU",
-    "Lateral Raises":"https://www.youtube.com/watch?v=kDqklk1ZESo",
-    "Tricep Pushdown":"https://www.youtube.com/watch?v=2-LAMcpzODU",
+    "Push-ups":"IODxDxX7oi4",
+    "Dumbbell Bench Press":"VmB1G1K7v94",
+    "Incline Dumbbell Press":"8iPEnn-ltC8",
+    "Shoulder Press":"B-aVuyhvLHU",
+    "Lateral Raises":"kDqklk1ZESo",
+    "Tricep Pushdown":"2-LAMcpzODU",
+    "Overhead Tricep Extension":"YbX7Wd8jQ-Q",
 
-    "Lat Pulldown":"https://www.youtube.com/watch?v=CAwf7n6Luuc",
-    "Seated Row":"https://www.youtube.com/watch?v=HJSVR_67OlM",
-    "Face Pull":"https://www.youtube.com/watch?v=eIq5CB9JfKE",
-    "Bicep Curl":"https://www.youtube.com/watch?v=ykJmrZ5v0Oo",
+    "Lat Pulldown":"CAwf7n6Luuc",
+    "Seated Row":"HJSVR_67OlM",
+    "Face Pull":"eIq5CB9JfKE",
+    "Dumbbell Row":"pYcpY20QaE8",
+    "Bicep Curl":"ykJmrZ5v0Oo",
+    "Hammer Curl":"zC3nLlEvin4",
+    "Reverse Fly":"tJX8qD1pXgI",
+    "Shrugs":"cJRVVxmytaM",
 
-    "Squats":"https://www.youtube.com/watch?v=aclHkVaku9U",
-    "Leg Press":"https://www.youtube.com/watch?v=IZxyjW7MPJQ",
-    "Lunges":"https://www.youtube.com/watch?v=QOVaHwm-Q6U",
-    "Calf Raises":"https://www.youtube.com/watch?v=-M4-G8p8fmc",
-    "Goblet Squat":"https://www.youtube.com/watch?v=6xwGFn-J_QE",
-    "Step-ups":"https://www.youtube.com/watch?v=dQqApCGd5Ss",
-    "Hamstring Curl":"https://www.youtube.com/watch?v=1Tq3QdYUuHs",
-
-    "Hanging Knee Raises":"https://www.youtube.com/watch?v=JB2oyawG9KI",
-    "Hanging Leg Raises":"https://www.youtube.com/watch?v=JB2oyawG9KI",
-    "Cable Crunch":"https://www.youtube.com/watch?v=2fjej2KQUqQ",
-    "Plank":"https://www.youtube.com/watch?v=pSHjTRCQxIw",
-    "Russian Twists":"https://www.youtube.com/watch?v=wkD8rjkodUI",
-    "Side Plank":"https://www.youtube.com/watch?v=K2VljzCC16g",
-    "Dead Bug":"https://www.youtube.com/watch?v=4XLEnwUr3QE",
-    "Bicycle Crunch":"https://www.youtube.com/watch?v=9FGilxCbdz8",
-    "Cable Woodchopper":"https://www.youtube.com/watch?v=QSLZ8xZ3hXo",
-    "Reverse Crunch":"https://www.youtube.com/watch?v=hyv14e2QDq0",
-    "Plank Shoulder Tap":"https://www.youtube.com/watch?v=gWHQpMUdQ6U",
-    "Hollow Hold":"https://www.youtube.com/watch?v=4xRpGgttca8",
-
-    "Treadmill Walk":"https://www.youtube.com/watch?v=O8QmWb9G2GQ",
-    "Arm Circles":"https://www.youtube.com/watch?v=140RTNMciH8",
-    "Leg Swings":"https://www.youtube.com/watch?v=7R8wM3z4FvY",
-    "Bodyweight Squats":"https://www.youtube.com/watch?v=aclHkVaku9U"
+    "Squats":"aclHkVaku9U",
+    "Leg Press":"IZxyjW7MPJQ",
+    "Lunges":"QOVaHwm-Q6U",
+    "Step-ups":"dQqApCGd5Ss",
+    "Hamstring Curl":"1Tq3QdYUuHs",
+    "Leg Extension":"YyvSfVjQeL0",
+    "Calf Raises":"-M4-G8p8fmc"
   };
 
   if (videos[name]) {
-    window.open(videos[name], "_blank");
-  } else {
-    alert("Video not found!");
+    document.getElementById("videoFrame").src =
+      "https://www.youtube.com/embed/" + videos[name];
   }
 }
 
-window.onload = function() {
-  loadWorkout();
-  let streak = localStorage.getItem("streak") || 0;
-  document.getElementById("streak").innerText = "🔥 Streak: " + streak + " days";
+function markDone() {
+  let streak = parseInt(localStorage.getItem("streak") || "0") + 1;
+  localStorage.setItem("streak", streak);
+  document.getElementById("streak").innerText = streak + " days";
+}
 
-  let weight = localStorage.getItem("weight");
-  if (weight) document.getElementById("weight").value = weight;
-};
+window.onload = loadWorkout;
 
 </script>
 
