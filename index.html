@@ -92,9 +92,9 @@
 <div class="card">
   <h3>🔥 Warm-up</h3>
   <ul>
-    <li onclick="playVideo('Walk')">Treadmill Walk (5–6 km/h, incline 2%, 5 min)</li>
-    <li onclick="playVideo('Squat')">Bodyweight Squats</li>
-    <li onclick="playVideo('Push-ups')">Push-ups</li>
+    <li onclick="handleClick(event,'Walk')">Treadmill Walk (5–6 km/h, incline 2%, 5 min)</li>
+    <li onclick="handleClick(event,'Squat')">Bodyweight Squats</li>
+    <li onclick="handleClick(event,'Push-ups')">Push-ups</li>
   </ul>
 </div>
 
@@ -116,6 +116,12 @@
 <!-- FINISHER -->
 <div class="card">
   <h3>⚡ Finisher</h3>
+
+  <select id="finisherType" onchange="loadFinisher()">
+    <option value="cardio">Cardio</option>
+    <option value="core">Core</option>
+  </select>
+
   <div id="finisherBox"></div>
 </div>
 
@@ -153,12 +159,12 @@ function loadWorkout(){
 
   let html="<b>Main Exercises</b><ul>";
   workouts[d].main.forEach(e=>{
-    html+=`<li onclick="select(this,'${e}')">${e}</li>`;
+    html+=`<li onclick="handleClick(event,'${e}')">${e}</li>`;
   });
 
   html+="</ul><b>Optional (Pick 2–3)</b><ul>";
   workouts[d].optional.forEach(e=>{
-    html+=`<li onclick="select(this,'${e}')">${e}</li>`;
+    html+=`<li onclick="handleClick(event,'${e}')">${e}</li>`;
   });
 
   html+="</ul>";
@@ -166,19 +172,20 @@ function loadWorkout(){
   document.getElementById("list").innerHTML=html;
 }
 
-// SELECT
-function select(el,name){
-  el.classList.toggle("active");
+// CLICK HANDLER (VIDEO + SELECT)
+function handleClick(event,name){
   playVideo(name);
+  event.target.classList.toggle("active");
   updateProgress();
 }
 
+// PROGRESS
 function updateProgress(){
   let c=document.querySelectorAll(".active").length;
   document.getElementById("progress").style.width=(c/6)*100+"%";
 }
 
-// AI FIXED
+// AI
 function runAI(){
   let e=energy.value, s=soreness.value;
 
@@ -193,21 +200,27 @@ function runAI(){
     `${msg}: Do ${exercises} exercises + finisher`;
 }
 
-// FINISHER FIXED
+// FINISHER
 function loadFinisher(){
-  let c=parseInt(localStorage.getItem("count")||0);
+  let type=document.getElementById("finisherType").value;
 
-  if(c%2==0){
+  if(type==="cardio"){
     document.getElementById("finisherBox").innerHTML=
-      "🏃 Cardio (Pick 1–2)<br>- Walk 6 km/h incline 3%<br>- Incline walk 6–8%<br>- Cycling 12–15 min";
+      `<ul>
+        <li onclick="handleClick(event,'Walk')">Walk 6 km/h incline 3% (10–12 min)</li>
+        <li onclick="handleClick(event,'Incline Walk')">Incline Walk 6–8%</li>
+        <li onclick="handleClick(event,'Cycling')">Cycling 12–15 min</li>
+      </ul>`;
   }else{
     document.getElementById("finisherBox").innerHTML=
-      "<b>🔥 Core (Pick 2–3)</b><br>"+
-      core.map(e=>`<div onclick="playVideo('${e}')">• ${e}</div>`).join("");
+      `<b>🔥 Core (Pick 2–3)</b>
+       <ul>
+        ${core.map(e=>`<li onclick="handleClick(event,'${e}')">${e}</li>`).join("")}
+       </ul>`;
   }
 }
 
-// CALORIES FIXED
+// CALORIES
 function calcCalories(){
   let w=document.getElementById("weight").value;
   if(!w) return;
@@ -225,18 +238,27 @@ function calcCalories(){
   document.getElementById("history").innerHTML=h.join("<br>");
 }
 
-// VIDEO FIXED
-function playVideo(n){
+// VIDEO
+function playVideo(name){
   const v={
     "Push-ups":"IODxDxX7oi4",
-    "Squat":"aclHkVaku9U",
-    "Plank":"pSHjTRCQxIw",
     "Bench Press":"VmB1G1K7v94",
-    "Shoulder Press":"B-aVuyhvLHU"
+    "Shoulder Press":"B-aVuyhvLHU",
+    "Squat":"aclHkVaku9U",
+    "Walk":"O8QmWb9G2GQ",
+    "Incline Walk":"O8QmWb9G2GQ",
+    "Cycling":"Rk0XgH0YdZQ",
+    "Plank":"pSHjTRCQxIw",
+    "Dead Bug":"4XLEnwUr3QE",
+    "Crunch":"9FGilxCbdz8",
+    "Bicycle":"9FGilxCbdz8",
+    "Russian Twist":"wkD8rjkodUI",
+    "Leg Raise":"JB2oyawG9KI"
   };
 
-  if(v[n]){
-    document.getElementById("videoFrame").src="https://www.youtube.com/embed/"+v[n];
+  if(v[name]){
+    document.getElementById("videoFrame").src=
+      "https://www.youtube.com/embed/"+v[name];
   }
 }
 
