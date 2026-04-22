@@ -1,261 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fitness App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+    }
+
+    header {
+      text-align: center;
+      padding: 15px;
+      font-size: 20px;
+      background: #020617;
+    }
+
+    .container { padding: 15px; }
+
+    .card {
+      background: #1e293b;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+    }
+
+    h2 { margin-top: 0; }
+
+    select, button, input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      border-radius: 6px;
+      border: none;
+    }
+
+    button {
+      background: #22c55e;
+      color: white;
+    }
+
+    li {
+      margin: 6px 0;
+      cursor: pointer;
+    }
+
+    iframe {
+      width: 100%;
+      height: 200px;
+      border: none;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>💪 Fitness Tracker</header>
+
+<div class="container">
+
+  <!-- AI -->
+  <div class="card">
+    <h2>🧠 AI Coach</h2>
+
+    <select id="energy">
+      <option value="low">Low Energy</option>
+      <option value="medium" selected>Medium</option>
+      <option value="high">High</option>
+    </select>
+
+    <select id="soreness">
+      <option value="low">Low Soreness</option>
+      <option value="medium" selected>Medium</option>
+      <option value="high">High</option>
+    </select>
+
+    <button onclick="runAI()">Get Suggestion</button>
+    <p id="ai"></p>
+  </div>
+
+  <!-- DAY -->
+  <div class="card">
+    <h2>Workout</h2>
+    <select id="day" onchange="loadWorkout()">
+      <option value="push">Push</option>
+      <option value="pull">Pull</option>
+      <option value="legs">Legs</option>
+    </select>
+
+    <ul id="list"></ul>
+  </div>
+
+  <!-- FINISHER -->
+  <div class="card">
+    <h2>⚡ Finisher</h2>
+    <p id="finisher"></p>
+  </div>
+
+  <!-- CALORIES -->
+  <div class="card">
+    <h2>🔥 Calories</h2>
+    <input id="weight" placeholder="Enter weight (kg)">
+    <button onclick="calc()">Calculate</button>
+    <p id="cal"></p>
+  </div>
+
+  <!-- VIDEO -->
+  <div class="card">
+    <h2>🎥 Exercise</h2>
+    <iframe id="video"></iframe>
+  </div>
+
+</div>
+
 <script>
 
-// ================= WORKOUT DATA =================
+// workouts
 const workouts = {
-  push: {
-    main: ["Dumbbell Bench Press","Shoulder Press"],
-    optional: ["Push-ups","Incline Dumbbell Press","Lateral Raises","Chest Fly","Tricep Pushdown","Overhead Tricep Extension"]
-  },
-  pull: {
-    main: ["Lat Pulldown","Seated Row"],
-    optional: ["Face Pull","Dumbbell Row","Bicep Curl","Hammer Curl","Reverse Fly","Shrugs"]
-  },
-  legs: {
-    main: ["Squats","Leg Press"],
-    optional: ["Lunges","Step-ups","Hamstring Curl","Leg Extension","Calf Raises"]
-  }
+  push: ["Push-ups","Bench Press","Shoulder Press"],
+  pull: ["Pull-ups","Row","Bicep Curl"],
+  legs: ["Squats","Lunges","Leg Press"]
 };
 
-// ================= FINISHER =================
-function getFinisherType() {
-  let count = parseInt(localStorage.getItem("workoutCount") || "0");
-  return count % 2 === 0 ? "cardio" : "core";
-}
-
-const cardioPlan = [
-  "Treadmill Walk – 6 km/h, incline 3%, 12 min",
-  "Incline Walk – 5 km/h, incline 6–8%, 10 min",
-  "Light Jog – 7–8 km/h, incline 1%, 8–10 min",
-  "Cycling – resistance 5–7, 12–15 min"
-];
-
-const corePlan = {
-  1: ["Plank – 20 sec x 3","Dead Bug – 10 reps","Cable Crunch – 12 reps","Bicycle Crunch – 15 reps"],
-  2: ["Plank – 30 sec x 3","Hanging Knee Raises – 10 reps","Russian Twists – 20 reps","Cable Crunch – 15 reps"],
-  3: ["Plank – 40 sec x 3","Hanging Leg Raises – 12 reps","Bicycle Crunch – 25 reps","Russian Twists – 25 reps"],
-  4: ["Plank – 60 sec x 3","Hanging Leg Raises – 15 reps","Cable Crunch – 15 reps","Bicycle Crunch – 30 reps"]
-};
-
-// ================= LOAD WORKOUT =================
+// load workout
 function loadWorkout() {
-  let day = document.getElementById("daySelect").value;
+  let day = document.getElementById("day").value;
 
-  document.getElementById("mainList").innerHTML =
-    workouts[day].main.map(e => `<li onclick="openVideo('${e}')">${e}</li>`).join("");
-
-  document.getElementById("optionalList").innerHTML =
-    workouts[day].optional.map(e =>
-      `<li onclick="toggleSelect(this,'${e}')">${e}</li>`
+  document.getElementById("list").innerHTML =
+    workouts[day].map(e =>
+      `<li onclick="video('${e}')">${e}</li>`
     ).join("");
-
-  updateProgress();
 }
 
-// ================= SELECT =================
-function toggleSelect(el, name) {
-  el.classList.toggle("highlight");
-  openVideo(name);
-  updateProgress();
-}
-
-function updateProgress() {
-  let selected = document.querySelectorAll(".highlight").length;
-  let percent = (selected / 6) * 100;
-  document.getElementById("progressBar").style.width = percent + "%";
-}
-
-// ================= AI =================
+// AI
 function runAI() {
-  let energy = document.getElementById("energy").value;
-  let soreness = document.getElementById("soreness").value;
+  let e = energy.value;
+  let s = soreness.value;
 
-  let intensity = 3;
+  let msg = "Do moderate workout";
 
-  if (energy === "low") intensity--;
-  if (energy === "high") intensity++;
-  if (soreness === "high") intensity--;
-  if (soreness === "low") intensity++;
+  if (e === "high" && s === "low") msg = "Go intense 💪";
+  if (e === "low") msg = "Keep it light";
+  if (s === "high") msg = "Recovery workout";
 
-  intensity = Math.max(2, Math.min(5, intensity));
-
-  highlightExercises(intensity);
-
-  document.getElementById("aiSuggestion").innerText =
-    `Do ${intensity} exercises + finisher`;
+  document.getElementById("ai").innerText = msg;
 }
 
-function highlightExercises(count) {
-  let items = document.querySelectorAll("#optionalList li");
+// finisher
+function finisher() {
+  let count = localStorage.getItem("count") || 0;
 
-  items.forEach((item, index) => {
-    item.classList.toggle("highlight", index < count);
-  });
-}
-
-// ================= FINISHER LOAD =================
-function getCurrentWeek() {
-  let start = localStorage.getItem("startDate");
-
-  if (!start) {
-    start = new Date().toISOString();
-    localStorage.setItem("startDate", start);
-  }
-
-  let diff = Math.floor((new Date() - new Date(start)) / (1000 * 60 * 60 * 24));
-  return Math.floor(diff / 7) % 4 + 1;
-}
-
-function loadFinisher() {
-  let type = getFinisherType();
-  let week = getCurrentWeek();
-
-  if (type === "cardio") {
-    document.getElementById("finisherType").innerText =
-      "🏃 Cardio Day (Pick 1–2)";
-
-    document.getElementById("finisherList").innerHTML =
-      cardioPlan.map(e => `<li>${e}</li>`).join("");
-
+  if (count % 2 == 0) {
+    document.getElementById("finisher").innerText =
+      "Cardio: Walk 10 min (5-6 km/h, incline 3%)";
   } else {
-    document.getElementById("finisherType").innerText =
-      "🔥 Core Day (Pick 2–3)";
-
-    document.getElementById("finisherList").innerHTML =
-      corePlan[week].map(e =>
-        `<li onclick="openVideo('${e.split(' – ')[0]}')">${e}</li>`
-      ).join("");
+    document.getElementById("finisher").innerText =
+      "Core: Plank 30 sec + Crunches";
   }
 }
 
-// ================= CALORIES =================
-function calculateCalories() {
-  let weight = parseFloat(document.getElementById("weight").value);
+// calories
+function calc() {
+  let w = weight.value;
 
-  if (!weight) {
-    alert("Enter weight");
-    return;
-  }
+  if (!w) return;
 
-  let type = getFinisherType();
-  let calories = 0;
+  let cal = Math.round(5 * w * 0.25);
 
-  if (type === "cardio") {
-    calories = 5 * weight * 0.25;
-  } else {
-    calories = 4 * weight * 0.2;
-  }
-
-  calories = Math.round(calories);
-
-  document.getElementById("caloriesResult").innerText =
-    "🔥 Burned: " + calories + " kcal";
-
-  let history = JSON.parse(localStorage.getItem("calorieHistory") || "[]");
-  let today = new Date().toLocaleDateString();
-
-  history.push({ date: today, calories });
-
-  if (history.length > 7) history.shift();
-
-  localStorage.setItem("calorieHistory", JSON.stringify(history));
-
-  loadChart();
+  document.getElementById("cal").innerText =
+    "Burned ~ " + cal + " kcal";
 }
 
-// ================= GRAPH =================
-let chart;
-
-function loadChart() {
-  let history = JSON.parse(localStorage.getItem("calorieHistory") || "[]");
-
-  let labels = history.map(e => e.date);
-  let data = history.map(e => e.calories);
-
-  let ctx = document.getElementById("calorieChart").getContext("2d");
-
-  if (chart) chart.destroy();
-
-  chart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: labels,
-      datasets: [{
-        label: "Calories Burned",
-        data: data,
-        tension: 0.3
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { labels: { color: "white" } }
-      },
-      scales: {
-        x: { ticks: { color: "white" } },
-        y: { ticks: { color: "white" } }
-      }
-    }
-  });
-}
-
-// ================= VIDEO =================
-function openVideo(name) {
-  const videos = {
+// video
+function video(name) {
+  const vids = {
     "Push-ups":"IODxDxX7oi4",
-    "Dumbbell Bench Press":"VmB1G1K7v94",
-    "Incline Dumbbell Press":"8iPEnn-ltC8",
-    "Shoulder Press":"B-aVuyhvLHU",
-    "Lateral Raises":"kDqklk1ZESo",
-    "Tricep Pushdown":"2-LAMcpzODU",
-    "Overhead Tricep Extension":"YbX7Wd8jQ-Q",
-
-    "Lat Pulldown":"CAwf7n6Luuc",
-    "Seated Row":"HJSVR_67OlM",
-    "Face Pull":"eIq5CB9JfKE",
-    "Dumbbell Row":"pYcpY20QaE8",
-    "Bicep Curl":"ykJmrZ5v0Oo",
-    "Hammer Curl":"zC3nLlEvin4",
-    "Reverse Fly":"tJX8qD1pXgI",
-    "Shrugs":"cJRVVxmytaM",
-
     "Squats":"aclHkVaku9U",
-    "Leg Press":"IZxyjW7MPJQ",
-    "Lunges":"QOVaHwm-Q6U",
-    "Step-ups":"dQqApCGd5Ss",
-    "Hamstring Curl":"1Tq3QdYUuHs",
-    "Leg Extension":"YyvSfVjQeL0",
-    "Calf Raises":"-M4-G8p8fmc",
-
-    "Plank":"pSHjTRCQxIw",
-    "Dead Bug":"4XLEnwUr3QE",
-    "Cable Crunch":"2fjej2KQUqQ",
-    "Bicycle Crunch":"9FGilxCbdz8",
-    "Hanging Knee Raises":"JB2oyawG9KI",
-    "Hanging Leg Raises":"JB2oyawG9KI",
-    "Russian Twists":"wkD8rjkodUI"
+    "Plank":"pSHjTRCQxIw"
   };
 
-  if (videos[name]) {
-    document.getElementById("videoFrame").src =
-      "https://www.youtube.com/embed/" + videos[name];
+  if (vids[name]) {
+    document.getElementById("video").src =
+      "https://www.youtube.com/embed/" + vids[name];
   }
 }
 
-// ================= DONE =================
-function markDone() {
-  let streak = parseInt(localStorage.getItem("streak") || "0") + 1;
-  let count = parseInt(localStorage.getItem("workoutCount") || "0") + 1;
-
-  localStorage.setItem("streak", streak);
-  localStorage.setItem("workoutCount", count);
-
-  document.getElementById("streak").innerText = streak + " days";
+// done
+function done() {
+  let c = localStorage.getItem("count") || 0;
+  localStorage.setItem("count", ++c);
 }
 
-// ================= INIT =================
+// init
 window.onload = function() {
   loadWorkout();
-  loadFinisher();
-  loadChart();
+  finisher();
 };
 
 </script>
+
+</body>
+</html>
