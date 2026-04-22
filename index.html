@@ -21,9 +21,7 @@
       backdrop-filter: blur(10px);
     }
 
-    .container {
-      padding: 15px;
-    }
+    .container { padding: 15px; }
 
     .card {
       background: rgba(255,255,255,0.05);
@@ -34,10 +32,7 @@
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
 
-    h2 {
-      margin-top: 0;
-      color: #38bdf8;
-    }
+    h2 { margin-top: 0; color: #38bdf8; }
 
     select, button {
       width: 100%;
@@ -53,24 +48,19 @@
       cursor: pointer;
     }
 
-    ul {
-      padding-left: 15px;
-    }
+    ul { padding-left: 15px; }
 
     li {
       margin: 8px 0;
       padding: 8px;
       border-radius: 8px;
       transition: 0.2s;
+      cursor: pointer;
     }
 
-    li:hover {
-      background: rgba(255,255,255,0.1);
-    }
+    li:hover { background: rgba(255,255,255,0.1); }
 
-    .highlight {
-      background: rgba(34,197,94,0.3);
-    }
+    .highlight { background: rgba(34,197,94,0.3); }
 
     iframe {
       width: 100%;
@@ -91,13 +81,9 @@
       height: 100%;
       width: 0%;
       background: linear-gradient(90deg, #22c55e, #4ade80);
-      transition: width 0.3s;
     }
 
-    .tag {
-      font-size: 12px;
-      opacity: 0.7;
-    }
+    .tag { font-size: 12px; opacity: 0.7; }
   </style>
 </head>
 
@@ -126,7 +112,6 @@
     </select>
 
     <button onclick="runAI()">⚡ Optimize Workout</button>
-
     <p id="aiSuggestion"></p>
   </div>
 
@@ -138,6 +123,17 @@
       <option value="pull">Pull</option>
       <option value="legs">Legs</option>
     </select>
+  </div>
+
+  <!-- WARMUP -->
+  <div class="card">
+    <h2>🔥 Warm-up</h2>
+    <ul>
+      <li onclick="openVideo('Treadmill Walk')">Treadmill Walk (5 km/h, incline 1%, 5 min)</li>
+      <li onclick="openVideo('Arm Circles')">Arm Circles</li>
+      <li onclick="openVideo('Leg Swings')">Leg Swings</li>
+      <li onclick="openVideo('Bodyweight Squats')">Bodyweight Squats</li>
+    </ul>
   </div>
 
   <!-- MAIN -->
@@ -154,6 +150,19 @@
     <div class="progress-bar">
       <div class="progress" id="progressBar"></div>
     </div>
+  </div>
+
+  <!-- CORE -->
+  <div class="card">
+    <h2>🔥 Core (Do 2–3)</h2>
+    <ul id="coreList"></ul>
+  </div>
+
+  <!-- ABS PLAN -->
+  <div class="card">
+    <h2>🔥 Abs Progression Plan</h2>
+    <p id="absWeek"></p>
+    <ul id="absPlan"></ul>
   </div>
 
   <button onclick="markDone()">✅ Workout Done</button>
@@ -189,6 +198,17 @@ const workouts = {
   }
 };
 
+const coreExercises = [
+  "Hanging Leg Raises","Cable Crunch","Plank","Russian Twists","Bicycle Crunch","Dead Bug"
+];
+
+const absPlan = {
+  1: ["Plank – 20 sec x 3","Dead Bug – 10 reps","Cable Crunch – 12 reps"],
+  2: ["Plank – 30 sec x 3","Hanging Knee Raises – 10 reps","Russian Twists – 20 reps"],
+  3: ["Plank – 40 sec x 3","Hanging Leg Raises – 12 reps","Bicycle Crunch – 25 reps"],
+  4: ["Plank – 60 sec x 3","Hanging Leg Raises – 15 reps","Cable Crunch – 15 reps"]
+};
+
 function loadWorkout() {
   let day = document.getElementById("daySelect").value;
 
@@ -197,6 +217,11 @@ function loadWorkout() {
 
   document.getElementById("optionalList").innerHTML =
     workouts[day].optional.map(e =>
+      `<li onclick="toggleSelect(this,'${e}')">${e}</li>`
+    ).join("");
+
+  document.getElementById("coreList").innerHTML =
+    coreExercises.map(e =>
       `<li onclick="toggleSelect(this,'${e}')">${e}</li>`
     ).join("");
 
@@ -211,7 +236,7 @@ function toggleSelect(el, name) {
 
 function updateProgress() {
   let selected = document.querySelectorAll(".highlight").length;
-  let percent = (selected / 4) * 100;
+  let percent = (selected / 6) * 100;
   document.getElementById("progressBar").style.width = percent + "%";
 }
 
@@ -231,7 +256,7 @@ function runAI() {
   highlightExercises(intensity);
 
   document.getElementById("aiSuggestion").innerText =
-    `Do ${intensity} exercises today`;
+    `Do ${intensity} exercises + 2 core`;
 }
 
 function highlightExercises(count) {
@@ -240,6 +265,30 @@ function highlightExercises(count) {
   items.forEach((item, index) => {
     item.classList.toggle("highlight", index < count);
   });
+}
+
+function getCurrentWeek() {
+  let start = localStorage.getItem("startDate");
+
+  if (!start) {
+    start = new Date().toISOString();
+    localStorage.setItem("startDate", start);
+  }
+
+  let diff = Math.floor((new Date() - new Date(start)) / (1000 * 60 * 60 * 24));
+  return Math.floor(diff / 7) % 4 + 1;
+}
+
+function loadAbsPlan() {
+  let week = getCurrentWeek();
+
+  document.getElementById("absWeek").innerText =
+    "Week " + week + " (Progressive Overload)";
+
+  document.getElementById("absPlan").innerHTML =
+    absPlan[week].map(e =>
+      `<li onclick="openVideo('${e.split(' – ')[0]}')">${e}</li>`
+    ).join("");
 }
 
 function openVideo(name) {
@@ -267,7 +316,19 @@ function openVideo(name) {
     "Step-ups":"dQqApCGd5Ss",
     "Hamstring Curl":"1Tq3QdYUuHs",
     "Leg Extension":"YyvSfVjQeL0",
-    "Calf Raises":"-M4-G8p8fmc"
+    "Calf Raises":"-M4-G8p8fmc",
+
+    "Hanging Leg Raises":"JB2oyawG9KI",
+    "Cable Crunch":"2fjej2KQUqQ",
+    "Plank":"pSHjTRCQxIw",
+    "Russian Twists":"wkD8rjkodUI",
+    "Bicycle Crunch":"9FGilxCbdz8",
+    "Dead Bug":"4XLEnwUr3QE",
+
+    "Treadmill Walk":"O8QmWb9G2GQ",
+    "Arm Circles":"140RTNMciH8",
+    "Leg Swings":"7R8wM3z4FvY",
+    "Bodyweight Squats":"aclHkVaku9U"
   };
 
   if (videos[name]) {
@@ -282,7 +343,10 @@ function markDone() {
   document.getElementById("streak").innerText = streak + " days";
 }
 
-window.onload = loadWorkout;
+window.onload = function() {
+  loadWorkout();
+  loadAbsPlan();
+};
 
 </script>
 
